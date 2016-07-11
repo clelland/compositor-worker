@@ -33,13 +33,15 @@
         border: 3px solid black;
         position: sticky;
       }
-
-      body {
-        background-color: #aaa;
-        width: 3000px;
-        height: 3000px;
+      body, html {
+        height: 100%;
+        margin: 0;
       }
-
+      #viewport {
+        background-color: #aaa;
+        height: 100%;
+        overflow: scroll;
+      }
       .sticky-content {
         background-color: white;
         width: 2000px;
@@ -75,14 +77,16 @@
     </style>
   </head>
   <body>
-    <div class="sticky-content" id="container">
-      <input type="text" id="amount" placeholder="# of elements"><button id="create">Create</button>
-      <div class="sticky left"></div>
-      <div class="sticky top"></div>
-      <div class="spacer"></div>
-      <div class="sticky bottom"></div>
-      <div class="horiz-spacer"></div>
-      <div class="sticky right"></div>
-    </div>
+    <div id="viewport">
+      <div class="sticky-content" id="container">
+        <input type="text" id="amount" placeholder="# of elements"><button id="create">Create</button>
+        <div class="sticky left"></div>
+        <div class="sticky top"></div>
+        <div class="spacer"></div>
+        <div class="sticky bottom"></div>
+        <div class="horiz-spacer"></div>
+        <div class="sticky right"></div>
+      </div>
+    <div>
   </body>
 </html>

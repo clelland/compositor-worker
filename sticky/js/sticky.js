@@ -1,5 +1,13 @@
 (function(scope) {
   "use strict";
+
+  scope.isMain = function() {
+    return scope.window;
+  };
+
+  // Log on worker by posting message to main.
+  scope.log = isMain() ? console.log : scope.postMessage;
+
   function getStickyElements(nodelist, node) {
     nodelist = nodelist || [];
     node = node || document.body;
@@ -67,8 +75,12 @@
       installStickyHandler(s, node, info);
     }
     if (scope.CompositorWorker) {
-      if (!scope.worker)
+      if (!scope.worker) {
         scope.worker = new CompositorWorker('js/sticky.js');
+        scope.worker.onmessage = function(e) {
+          console.log(e.data);
+        }
+      }
       scope.worker.postMessage(scope.sticky_info);
     }
   }
@@ -153,23 +165,46 @@
     this.proxy_.transform = t;
   };
 
+  // Returns a promise which is resolved once proxy is initialized and can be
+  // mutated.
+  scope.awaitProxyInit = function(proxy) {
+    return new Promise(function(resolve, reject) {
+      function check() {
+        if (proxy.initialized)
+          resolve(proxy);
+        else
+          requestAnimationFrame(check);
+      }
+      requestAnimationFrame(check);
+    });
+  };
 
   function initCompositorWorker() {
-    console.log('Init on compoositor worker');
+    log('Init on compoositor worker');
     self.onmessage = function(e) {
+      log('onmessage on compositor');
       scope.sticky_info = e.data;
+      var proxyInitPromises = [];
       // Wrap all of the compositor proxies to match expectations.
       for (var i = 0; i < sticky_info.length; i++) {
+        proxyInitPromises.push(awaitProxyInit(sticky_info[i].sticky));
+        proxyInitPromises.push(awaitProxyInit(sticky_info[i].scroller));
+
         sticky_info[i].sticky = new scope.WrapCompositorProxy(sticky_info[i].sticky);
         sticky_info[i].scroller = new scope.WrapCompositorProxy(sticky_info[i].scroller);
       }
-      scope.requestAnimationFrame(scope.compositorUpdate);
-      console.log('onmessage on compositor');
+
+      // start ticking once all proxies are initialized
+      Promise.all(proxyInitPromises).then(function() {
+        log('All proxies are initialized');
+        scope.requestAnimationFrame(scope.compositorUpdate);
+      });
     };
   }
 
 
-  if (scope.window) {
+  if (scope.isMain()) {
+    log('Init on main');
     scope.window.intializeSticky = gatherStickyInfo;
   } else {
     scope.sticky_info = [];
