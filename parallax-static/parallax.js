@@ -11,7 +11,7 @@
 
   scope.tick = function(timestamp) {
 
-    log('tick: ' + scroller.scrollTop);
+    //log('tick: ' + scroller.scrollTop);
 
     var t = bg.transform;
     t.m42 = Math.round(scroller.scrollTop*0.8);
